@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Intentra — Your Intent Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --surface2: #181818;
+      --border: #222222;
+      --border2: #2e2e2e;
+      --text: #f0ece4;
+      --text-dim: #888880;
+      --text-faint: #444440;
+      --accent: #e8d5a3;
+      --accent-dim: #9e8f6a;
+      --red: #e05252;
+      --green: #52c97a;
+      --blue: #5288e0;
+      --orange: #e08c52;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Instrument Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain overlay ─────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* ── Sidebar ────────────────────────────────────── */
+    .sidebar {
+      width: 220px;
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 32px 0;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 0 24px 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-word {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--accent-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      padding: 20px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-faint);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 0 8px;
+      margin: 12px 0 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: var(--text-dim);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+
+    .nav-item.active {
+      background: var(--surface2);
+      color: var(--accent);
+      border-color: var(--border2);
+    }
+
+    .nav-item .icon {
+      width: 16px;
+      text-align: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red);
+      color: white;
+      font-family: var(--mono);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .sidebar-footer {
+      padding: 20px 24px 0;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-faint);
+      line-height: 1.6;
+    }
+
+    /* ── Main content ───────────────────────────────── */
+    .main {
+      margin-left: 220px;
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ────────────────────────────────────── */
+    .topbar {
+      height: 60px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      background: rgba(8,8,8,0.9);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+    }
+
+    .search-wrap {
+      flex: 1;
+      max-width: 520px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 9px 12px 9px 36px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input::placeholder { color: var(--text-faint); }
+    .search-input:focus { border-color: var(--border2); }
+
+    .search-kbd {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-faint);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      color: #080808;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    /* ── Page content ───────────────────────────────── */
+    .page {
+      padding: 36px 32px;
+      display: none;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .page.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Page header ────────────────────────────────── */
+    .page-header {
+      margin-bottom: 28px;
+    }
+
+    .page-eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .page-title {
+      font-family: var(--serif);
+      font-size: 32px;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .page-desc {
+      color: var(--text-dim);
+      font-size: 13px;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* ── Stat cards ─────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--border2); }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      filter: blur(30px);
+      opacity: 0.15;
+    }
+
+    .stat-card.gold::after { background: var(--accent); }
+    .stat-card.red::after { background: var(--red); }
+    .stat-card.green::after { background: var(--green); }
+    .stat-card.blue::after { background: var(--blue); }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-faint);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-family: var(--serif);
+      font-size: 36px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-value.red { color: var(--red); }
+    .stat-value.green { color: var(--green); }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-top: 6px;
+      font-family: var(--mono);
+    }
+
+    /* ── Intent breakdown ───────────────────────────── */
+    .section-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .intent-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .intent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .intent-name {
+      width: 120px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-dim);
+      text-transform: capitalize;
+      flex-shrink: 0;
+    }
+
+    .intent-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .intent-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .intent-count {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-faint);
+      width: 24px;
+      text-align: right;
+    }
+
+    /* Intent colors */
+    .bar-learning { background: var(--blue); }
+    .bar-career { background: var(--green); }
+    .bar-startup { background: var(--accent); }
+    .bar-shopping { background: var(--orange); }
+    .bar-entertainment { background: #9b72e0; }
+    .bar-self-improvement { background: #e072b8; }
+    .bar-other { background: var(--text-faint); }
+
+    /* ── Saves list ─────────────────────────────────── */
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+
+    .filter-chip:hover { border-color: var(--border2); color: var(--text); }
+    .filter-chip.active {
+      background: var(--surface2);
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .saves-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .save-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      transition: all 0.15s;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .save-card:hover {
+      border-color: var(--border2);
+      background: var(--surface2);
+    }
+
+    .save-card.action-taken {
+      opacity: 0.5;
+    }
+
+    .save-card-left {}
+
+    .save-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .intent-pill {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .pill-learning { background: rgba(82,136,224,0.15); color: var(--blue); }
+    .pill-career { background: rgba(82,201,122,0.15); color: var(--green); }
+    .pill-startup { background: rgba(232,213,163,0.15); color: var(--accent); }
+    .pill-shopping { background: rgba(224,140,82,0.15); color: var(--orange); }
+    .pill-entertainment { background: rgba(155,114,224,0.15); color: #9b72e0; }
+    .pill-self-improvement { background: rgba(224,114,184,0.15); color: #e072b8; }
+    .pill-other { background: rgba(100,100,100,0.15); color: var(--text-faint); }
+
+    .save-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-faint);
+    }
+
+    .save-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 600px;
+    }
+
+    .save-summary {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .save-action-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent-dim);
+      font-family: var(--mono);
+    }
+
+    .save-action-hint::before {
+      content: '→';
+      color: var(--accent);
+    }
+
+    .save-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .decay-badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--text-faint);
+      border: 1px solid var(--border);
+    }
+
+    .decay-badge.high {
+      background: rgba(224,82,82,0.1);
+      color: var(--red);
+      border-color: rgba(224,82,82,0.2);
+    }
+
+    .decay-badge.medium {
+      background: rgba(224,140,82,0.1);
+      color: var(--orange);
+      border-color: rgba(224,140,82,0.2);
+    }
+
+    .action-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-faint);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      border-color: var(--green);
+      color: var(--green);
+      background: rgba(82,201,122,0.05);
+    }
+
+    .open-btn {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-faint);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .open-btn:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    /* ── Forgotten section ──────────────────────────── */
+    .forgotten-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: rgba(224,82,82,0.05);
+      border: 1px solid rgba(224,82,82,0.15);
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .forgotten-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .forgotten-text {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .forgotten-text strong { color: var(--red); }
+
+    /* ── Empty state ─────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-faint);
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: var(--serif);
+      font-size: 20px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .empty-desc {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-faint);
+    }
+
+    /* ── Loading spinner ─────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-row {
+      display: flex;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    /* ── Search results ──────────────────────────────── */
+    .search-results-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-faint);
+      margin-bottom: 14px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Confidence bar ──────────────────────────────── */
+    .confidence-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .confidence-bar {
+      width: 40px;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: var(--accent-dim);
+      border-radius: 2px;
+    }
+
+    .confidence-val {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-faint);
+    }
+
+    /* ── Scrollbar ───────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* ── Toast ───────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      z-index: 9000;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: rgba(82,201,122,0.4); color: var(--green); }
+    .toast.error { border-color: rgba(224,82,82,0.4); color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-word">Intentra</div>
+      <div class="logo-sub">Intent Engine</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard', this)">
+        <span class="icon">◈</span> Dashboard
+      </a>
+      <a class="nav-item" data-page="saves" onclick="showPage('saves', this)">
+        <span class="icon">◎</span> All Saves
+      </a>
+
+      <div class="nav-label">Intent</div>
+      <a class="nav-item" data-page="forgotten" onclick="showPage('forgotten', this)">
+        <span class="icon">◌</span> Forgotten
+        <span class="nav-badge" id="forgottenBadge" style="display:none">0</span>
+      </a>
+      <a class="nav-item" data-page="search" onclick="showPage('search', this)">
+        <span class="icon">⌕</span> Semantic Search
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div>v0.1.0 — Phase 1</div>
+      <div style="margin-top:4px;color:var(--text-faint)">localhost:8000</div>
+    </div>
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Search your saves semantically..."
+          id="topSearchInput"
+          onkeydown="handleTopSearch(event)"
+        />
+        <span class="search-kbd">⏎</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-ghost" onclick="refreshAll()">↺ Refresh</button>
+      </div>
+    </div>
+
+    <!-- ── Dashboard page ──────────────────────── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-eyebrow">Overview</div>
+        <div class="page-title">Your Intent Dashboard</div>
+        <div class="page-desc">The AI that remembers what you meant to do.</div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card gold">
+          <div class="stat-label">Total Saves</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">all time</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Forgotten</div>
+          <div class="stat-value red" id="statForgotten">—</div>
+          <div class="stat-sub">14+ days, no action</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Action Rate</div>
+          <div class="stat-value green" id="statActionRate">—</div>
+          <div class="stat-sub">saves acted on</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Top Intent</div>
+          <div class="stat-value" id="statTopIntent" style="font-size:22px;margin-top:6px">—</div>
+          <div class="stat-sub">most saved</div>
+        </div>
+      </div>
+
+      <!-- Intent breakdown -->
+      <div class="section-title">
+        Intent Breakdown <div class="section-line"></div>
+      </div>
+      <div class="intent-bars" id="intentBars">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Recent saves -->
+      <div class="section-title">
+        Recent Saves <div class="section-line"></div>
+      </div>
+      <div class="saves-list" id="recentSaves">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ── All Saves page ──────────────────────── -->
+    <div class="page" id="page-saves">
+      <div class="page-header">
+        <div class="page-eyebrow">Library</div>
+        <div class="page-title">All Saves</div>
+        <div class="page-desc">Every intention you've captured.</div>
+      </div>
+
+      <div class="filter-row" id="filterRow">
+        <button class="filter-chip active" onclick="filterByIntent(null, this)">All</button>
+        <button class="filter-chip" onclick="filterByIntent('learning', this)">Learning</button>
+        <button class="filter-chip" onclick="filterByIntent('career', this)">Career</button>
+        <button class="filter-chip" onclick="filterByIntent('startup', this)">Startup</button>
+        <button class="filter-chip" onclick="filterByIntent('shopping', this)">Shopping</button>
+        <button class="filter-chip" onclick="filterByIntent('entertainment', this)">Entertainment</button>
+        <button class="filter-chip" onclick="filterByIntent('self-improvement', this)">Self-improvement</button>
+        <button class="filter-chip" onclick="filterByIntent('other', this)">Other</button>
+      </div>
+
+      <div class="saves-list" id="allSavesList">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ── Forgotten page ─────────────────────── -->
+    <div class="page" id="page-forgotten">
+      <div class="page-header">
+        <div class="page-eyebrow">Resurfaced</div>
+        <div class="page-title">Forgotten Intentions</div>
+        <div class="page-desc">Saved 14+ days ago. Never acted on.</div>
+      </div>
+
+      <div class="forgotten-header">
+        <div class="forgotten-dot"></div>
+        <div class="forgotten-text">
+          These saves are fading. <strong id="forgottenCount">0</strong> intentions waiting for action.
+        </div>
+      </div>
+
+      <div class="saves-list" id="forgottenList">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- ── Search page ────────────────────────── -->
+    <div class="page" id="page-search">
+      <div class="page-header">
+        <div class="page-eyebrow">Semantic Search</div>
+        <div class="page-title">Find by Meaning</div>
+        <div class="page-desc">Search across your saves using natural language — not just keywords.</div>
+      </div>
+
+      <div class="search-wrap" style="max-width:100%;margin-bottom:24px;">
+        <span class="search-icon">⌕</span>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="e.g. 'AI internship posts' or 'startup ideas I found'"
+          id="semanticInput"
+          style="font-size:14px;padding:12px 12px 12px 38px;"
+          onkeydown="handleSemanticSearch(event)"
+        />
+      </div>
+
+      <div id="searchResults"></div>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+<script>
+  const API = 'http://localhost:8000';
+
+  // ── Navigation ──────────────────────────────────────
+  function showPage(pageId, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    if (el) el.classList.add('active');
+    if (pageId === 'saves') loadAllSaves();
+    if (pageId === 'forgotten') loadForgotten();
+  }
+
+  // ── Toast ───────────────────────────────────────────
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.className = 'toast', 3000);
+  }
+
+  // ── Format helpers ──────────────────────────────────
+  function timeAgo(dateStr) {
+    const d = new Date(dateStr);
+    const diff = Math.floor((Date.now() - d) / 1000);
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  function decayLabel(score) {
+    if (score > 20) return 'high';
+    if (score > 7) return 'medium';
+    return '';
+  }
+
+  function intentPillClass(intent) {
+    const map = {
+      learning: 'pill-learning',
+      career: 'pill-career',
+      startup: 'pill-startup',
+      shopping: 'pill-shopping',
+      entertainment: 'pill-entertainment',
+      'self-improvement': 'pill-self-improvement',
+      other: 'pill-other'
+    };
+    return map[intent] || 'pill-other';
+  }
+
+  function barClass(intent) {
+    const map = {
+      learning: 'bar-learning',
+      career: 'bar-career',
+      startup: 'bar-startup',
+      shopping: 'bar-shopping',
+      entertainment: 'bar-entertainment',
+      'self-improvement': 'bar-self-improvement',
+      other: 'bar-other'
+    };
+    return map[intent] || 'bar-other';
+  }
+
+  // ── Save card HTML ──────────────────────────────────
+  function renderSaveCard(s) {
+    const decay = s.decay_score || 0;
+    const dClass = decayLabel(decay);
+    const conf = Math.round((s.intent_confidence || 0) * 100);
+
+    return `
+      <div class="save-card ${s.action_taken ? 'action-taken' : ''}" id="card-${s.id}">
+        <div class="save-card-left">
+          <div class="save-meta">
+            <span class="intent-pill ${intentPillClass(s.intent)}">${s.intent || 'other'}</span>
+            <span class="save-date">${timeAgo(s.created_at)}</span>
+            ${s.intent_confidence ? `
+              <div class="confidence-wrap">
+                <div class="confidence-bar">
+                  <div class="confidence-fill" style="width:${conf}%"></div>
+                </div>
+                <span class="confidence-val">${conf}%</span>
+              </div>` : ''}
+          </div>
+          <div class="save-title">${s.title || s.url}</div>
+          ${s.summary && s.summary !== 'No summary available.' && s.summary !== 'AI service temporarily unavailable.'
+            ? `<div class="save-summary">${s.summary}</div>` : ''}
+          ${s.suggested_action && s.suggested_action !== 'Review this save manually.'
+            ? `<div class="save-action-hint">${s.suggested_action}</div>` : ''}
+        </div>
+        <div class="save-card-right">
+          ${dClass ? `<span class="decay-badge ${dClass}">decay ${Math.round(decay)}</span>` : ''}
+          <a class="open-btn" href="${s.url}" target="_blank">↗ open</a>
+          ${!s.action_taken
+            ? `<button class="action-btn" onclick="markDone(${s.id}, event)">✓ done</button>`
+            : `<span style="font-family:var(--mono);font-size:10px;color:var(--green)">✓ acted</span>`}
+        </div>
+      </div>
+    `;
+  }
+
+  // ── Load insights + recent ──────────────────────────
+  async function loadDashboard() {
+    try {
+      const [insightsRes, savesRes] = await Promise.all([
+        fetch(`${API}/insights/`),
+        fetch(`${API}/saves/`)
+      ]);
+
+      const insights = await insightsRes.json();
+      const saves = await savesRes.json();
+
+      // Stats
+      document.getElementById('statTotal').textContent = insights.total_saves ?? 0;
+      document.getElementById('statForgotten').textContent = insights.forgotten_saves ?? 0;
+      document.getElementById('statActionRate').textContent =
+        (insights.action_rate_percent ?? 0) + '%';
+
+      const top = insights.intent_breakdown?.[0];
+      document.getElementById('statTopIntent').textContent =
+        top ? top.intent : '—';
+
+      // Forgotten badge
+      if (insights.forgotten_saves > 0) {
+        const badge = document.getElementById('forgottenBadge');
+        badge.textContent = insights.forgotten_saves;
+        badge.style.display = 'inline';
+      }
+
+      document.getElementById('forgottenCount').textContent = insights.forgotten_saves ?? 0;
+
+      // Intent bars
+      const maxCount = Math.max(...(insights.intent_breakdown?.map(i => i.count) || [1]));
+      document.getElementById('intentBars').innerHTML = insights.intent_breakdown?.length
+        ? insights.intent_breakdown.map(i => `
+            <div class="intent-row">
+              <div class="intent-name">${i.intent}</div>
+              <div class="intent-bar-wrap">
+                <div class="intent-bar-fill ${barClass(i.intent)}"
+                  style="width:${Math.round((i.count / maxCount) * 100)}%"></div>
+              </div>
+              <div class="intent-count">${i.count}</div>
+            </div>
+          `).join('')
+        : '<div style="color:var(--text-faint);font-size:12px;font-family:var(--mono)">No intents yet</div>';
+
+      // Recent saves (last 5)
+      document.getElementById('recentSaves').innerHTML = saves.length
+        ? saves.slice(0, 5).map(renderSaveCard).join('')
+        : `<div class="empty-state">
+            <div class="empty-icon">◎</div>
+            <div class="empty-title">No saves yet</div>
+            <div class="empty-desc">Use the Chrome extension to save your first page</div>
+          </div>`;
+
+    } catch(e) {
+      showToast('Cannot reach backend — is it running?', 'error');
+    }
+  }
+
+  // ── All saves ───────────────────────────────────────
+  async function loadAllSaves(intent = null) {
+    document.getElementById('allSavesList').innerHTML =
+      '<div class="loading-row"><div class="spinner"></div></div>';
+    const url = intent ? `${API}/saves/?intent=${intent}` : `${API}/saves/`;
+    const res = await fetch(url);
+    const saves = await res.json();
+    document.getElementById('allSavesList').innerHTML = saves.length
+      ? saves.map(renderSaveCard).join('')
+      : `<div class="empty-state">
+          <div class="empty-icon">◎</div>
+          <div class="empty-title">No saves here</div>
+          <div class="empty-desc">Nothing in this intent category yet</div>
+        </div>`;
+  }
+
+  function filterByIntent(intent, el) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    loadAllSaves(intent);
+  }
+
+  // ── Forgotten ───────────────────────────────────────
+  async function loadForgotten() {
+    document.getElementById('forgottenList').innerHTML =
+      '<div class="loading-row"><div class="spinner"></div></div>';
+    const res = await fetch(`${API}/saves/forgotten`);
+    const saves = await res.json();
+    document.getElementById('forgottenList').innerHTML = saves.length
+      ? saves.map(renderSaveCard).join('')
+      : `<div class="empty-state">
+          <div class="empty-icon">✓</div>
+          <div class="empty-title">Nothing forgotten</div>
+          <div class="empty-desc">You're on top of everything. Nice.</div>
+        </div>`;
+  }
+
+  // ── Mark done ───────────────────────────────────────
+  async function markDone(id, e) {
+    e.stopPropagation();
+    await fetch(`${API}/saves/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action_taken: true, engagement_score: 1.0 })
+    });
+    document.getElementById('card-' + id)?.classList.add('action-taken');
+    showToast('✓ Marked as done', 'success');
+    loadDashboard();
+  }
+
+  // ── Semantic search ─────────────────────────────────
+  async function runSearch(q) {
+    if (!q.trim()) return;
+    showPage('search', document.querySelector('[data-page="search"]'));
+    document.getElementById('semanticInput').value = q;
+    document.getElementById('searchResults').innerHTML =
+      '<div class="loading-row"><div class="spinner"></div></div>';
+    const res = await fetch(`${API}/search/?q=${encodeURIComponent(q)}`);
+    const saves = await res.json();
+    document.getElementById('searchResults').innerHTML = `
+      <div class="search-results-label">${saves.length} result${saves.length !== 1 ? 's' : ''} for "${q}"</div>
+      ${saves.length ? saves.map(renderSaveCard).join('') : `
+        <div class="empty-state">
+          <div class="empty-icon">⌕</div>
+          <div class="empty-title">No results</div>
+          <div class="empty-desc">Try different words or save more content</div>
+        </div>`}
+    `;
+  }
+
+  function handleTopSearch(e) {
+    if (e.key === 'Enter') runSearch(e.target.value);
+  }
+
+  function handleSemanticSearch(e) {
+    if (e.key === 'Enter') runSearch(e.target.value);
+  }
+
+  // ── Refresh ─────────────────────────────────────────
+  function refreshAll() {
+    loadDashboard();
+    showToast('Refreshed');
+  }
+
+  // ── Init ────────────────────────────────────────────
+  loadDashboard();
+</script>
+</body>
+</html>
