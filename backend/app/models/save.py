@@ -1,6 +1,6 @@
 from datetime import datetime
-from sqlalchemy import String, Text, Float, Boolean, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Text, Float, Boolean, DateTime, ForeignKey, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
 from app.core.database import Base
 
@@ -10,11 +10,18 @@ class Save(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
+    # ── Owner ─────────────────────────────────────────
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    user: Mapped["User"] = relationship("User", back_populates="saves")
+
     # ── Core content ──────────────────────────────────────────
     url: Mapped[str] = mapped_column(String(2048), nullable=False)
     title: Mapped[str] = mapped_column(String(512), nullable=True)
     selected_text: Mapped[str] = mapped_column(Text, nullable=True)
     summary: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # ── Screenshot ────────────────────────────────────
+    screenshot_text: Mapped[str] = mapped_column(Text, nullable=True)
 
     # ── Intent Engine ─────────────────────────────────────────
     intent: Mapped[str] = mapped_column(String(100), nullable=True)
