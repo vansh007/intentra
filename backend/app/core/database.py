@@ -1,28 +1,34 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-
 from app.core.config import settings
 
-# ─── Engine ─────────────────────────────────────────────────────────────────
+
+def get_async_url(url: str) -> str:
+    """Force the correct async driver regardless of how the URL was provided."""
+    url = url.replace("postgresql+psycopg2://", "postgresql+asyncpg://")
+    url = url.replace("postgres://", "postgresql+asyncpg://")
+    if url.startswith("postgresql://") and "asyncpg" not in url:
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+
 engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.APP_ENV == "development",  # logs SQL in dev
+    get_async_url(settings.DATABASE_URL),
+    echo=settings.APP_ENV == "production",
     pool_pre_ping=True,
 )
 
-# ─── Session Factory ─────────────────────────────────────────────────────────
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
-# ─── Base Model ──────────────────────────────────────────────────────────────
+
 class Base(DeclarativeBase):
     pass
 
 
-# ─── Dependency (used in FastAPI routes) ─────────────────────────────────────
 async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         try:
