@@ -9,8 +9,8 @@
     "storage"
   ],
   "host_permissions": [
-    "http://localhost:8000/*"
-  ],
+  "https://intentra-3406.onrender.com/*"
+],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

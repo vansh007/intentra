@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL = "https://intentra-3406.onrender.com";
 
 let currentTab = 'login';
 
