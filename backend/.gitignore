@@ -1,6 +1,6 @@
 # Environment variables
 .env
-
+.vscode/
 # Python
 __pycache__/
 *.pyc

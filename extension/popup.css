@@ -1,0 +1,105 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 340px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #080808;
+  color: #f0ece4;
+  padding: 20px;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8d5a3;
+  margin-bottom: 16px;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 16px;
+  border: 1px solid #222;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab {
+  flex: 1;
+  padding: 9px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #1a1a1a;
+  color: #e8d5a3;
+}
+
+.field, textarea {
+  width: 100%;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 7px;
+  color: #f0ece4;
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+textarea {
+  resize: none;
+  height: 70px;
+}
+
+.submit, .btn-save {
+  width: 100%;
+  padding: 10px;
+  background: #e8d5a3;
+  color: #080808;
+  border: none;
+  border-radius: 7px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.status {
+  margin-top: 10px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.success { color: #52c97a; }
+.error { color: #e05252; }
+.loading { color: #e8d5a3; }
+
+.page-title {
+  font-size: 12px;
+  color: #777;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 7px;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout {
+  font-size: 10px;
+  background: none;
+  border: 1px solid #222;
+  color: #666;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
